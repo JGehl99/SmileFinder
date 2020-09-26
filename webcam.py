@@ -1,5 +1,4 @@
 import cv2
-
 from imageai.Prediction.Custom import CustomImagePrediction
 from time import sleep
 import os
@@ -7,15 +6,21 @@ import os
 face_cascade = cv2.CascadeClassifier('haarcascade_frontalface_default.xml')
 
 
-def detect(gray, frame):
-    faces = face_cascade.detectMultiScale(gray, 1.3, 3)
-    for (x, y, w, h) in faces:
-        cv2.rectangle(frame, (x, y), ((x + w), (y + h)), (255, 0, 0), 2)
-    return frame
+def get_frame(gray, img):
+    faces = face_cascade.detectMultiScale(gray, 1.3, 3, minSize=(30, 30))
+
+    try:
+        f = faces[0]
+        return img[f[1]:f[1] + f[3], f[0]:f[0] + f[2]]
+    except:
+        return img
 
 
 def show_webcam(mirror=False):
     cam = cv2.VideoCapture(0)
+
+    frameskip = 5
+
     while True:
 
         ret_val, img = cam.read()
@@ -24,26 +29,22 @@ def show_webcam(mirror=False):
             img = cv2.flip(img, 1)
 
         if cv2.waitKey(1) == 27:
-            break  # esc to quit
+            break
 
-        cv2.imwrite("webcam-image.jpg", img)
+        if frameskip % 5 == 0:
+            gray = cv2.cvtColor(img, cv2.COLOR_BGR2GRAY)
+            face = (gray, img)
+            # cv2.imwrite("faceimage.jpg", face)
+            predictions, probabilities = prediction.predictImage(face, input_type="array", result_count=2)
+            print("Frown: ", probabilities[0], " Smile: ", probabilities[1])
 
-        gray = cv2.cvtColor(img, cv2.COLOR_BGR2GRAY)
-        img = detect(gray, img)
-
-        predictions, probabilities = prediction.predictImage("webcam-image.jpg", result_count=2)
         if probabilities[0] < 80:
             cv2.rectangle(img, (0, 0), (50, 50), (0, 255, 0), -1)
         else:
             cv2.rectangle(img, (0, 0), (50, 50), (0, 0, 255), -1)
 
-        cv2.imshow('my webcam', img)
-
-        print("Smile: ", probabilities[0], " Frown: ", probabilities[1])
-
-        os.remove("webcam-image.jpg")
-
-        sleep(1./60)
+        frameskip = (frameskip + 1) % 10
+        cv2.imshow('SmileFinder', img)
 
     cv2.destroyAllWindows()
 
