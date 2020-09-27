@@ -26,24 +26,23 @@ def show_webcam(mirror=False):
         if cv2.waitKey(1) == 27:
             break  # esc to quit
 
-        cv2.imwrite("webcam-image.jpg", img)
+        cv2.imwrite("templates/webcam-image.jpg", img)
 
         gray = cv2.cvtColor(img, cv2.COLOR_BGR2GRAY)
         img = detect(gray, img)
 
-        predictions, probabilities = prediction.predictImage("webcam-image.jpg", result_count=2)
+        predictions, probabilities = prediction.predictImage("templates/webcam-image.jpg", result_count=2)
         if probabilities[0] < 80:
             cv2.rectangle(img, (0, 0), (50, 50), (0, 255, 0), -1)
         else:
             cv2.rectangle(img, (0, 0), (50, 50), (0, 0, 255), -1)
 
-        cv2.imshow('my webcam', img)
+        #cv2.imshow('Webcam Feed', img)
 
-        print("Smile: ", probabilities[0], " Frown: ", probabilities[1])
+        print("Frown: ", probabilities[0], " Smile: ", probabilities[1])
 
-        os.remove("webcam-image.jpg")
-
-        sleep(1./60)
+        cv2.imwrite("templates/ml-image.jpg", img)
+        sleep(1/30)
 
     cv2.destroyAllWindows()
 
